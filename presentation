@@ -1,0 +1,50 @@
+#!/usr/bin/env node
+
+var fs = require('fs-extra')
+
+// module name
+var cliArg = process.argv.slice(2)
+var location = process.cwd();
+
+var files = [
+  {action: 'write', loc: location + '/components/' + cliArg + '.js', render: function(loc) {
+    fs.readFile(location + '/blueprints/components/__name__.js', 'utf8', function(err, data) {
+      fs.outputFile(loc, data);
+    });
+  }}, 
+  {action: 'write', loc: location + '/models/' + cliArg + '.js', render: function(loc) {
+    fs.readFile(location + '/blueprints/models/__name__.js', 'utf8', function(err, data) {
+      fs.outputFile(loc, data);
+    });
+  }}
+];
+
+var _writeFile = function(info) {
+  info.render(info.loc);
+  // return fs.outputFile(info.loc, info.render());
+};
+
+var _actions = {
+  write: function(info) {
+    return _writeFile(info);
+  },
+
+  remove: function(info) {
+    return removeFile(info.outputPath);
+  }
+};
+
+var _commit = function(result) {
+  var action = _actions[result.action];
+
+  return action.call(this, result);
+};
+
+var _process = function(files) {
+  return Promise.resolve()
+  .then(function() {
+    files.map(_commit)
+  })
+};
+
+_process(files);
